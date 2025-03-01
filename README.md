@@ -1,5 +1,5 @@
 # RNA-Structure-Hub
-How to Access & Clone moss-lab/RNA-Structure-Hub (Private Repository)
+**How to Access & Clone moss-lab/RNA-Structure-Hub (Private Repository)**
 
 Follow these steps to set up SSH access and clone the private repository.
 🚀 Step 1: Generate a New SSH Key
