@@ -59,3 +59,24 @@ Restart the SSH agent:
 
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_rsa
+------------------------------------------------------------------------------
+**Clone the Repository**
+
+Now, clone the private repository using SSH:
+
+**git clone git@github.com:moss-lab/RNA-Structure-Hub.git**
+
+Navigate to the cloned repository:
+
+cd RNA-Structure-Hub
+
+Pull the latest updates:
+
+git pull origin main
+
+Make edits, then commit and push:
+
+git add .
+git commit -m "Your message here"
+git push origin main
+
