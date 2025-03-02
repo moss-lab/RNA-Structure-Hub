@@ -21,3 +21,55 @@ Using version control (like GitHub) helps us:
 
 
 Even if it feels like overkill now, it's a best practice that will save us time, effort, and frustration in the future! 🚀
+
+**Our lab is growing rapidly, and while things might feel a bit unstructured right now, we need to start building good habits for version control and documentation. From now on, every new piece of code used in lab projects must be properly documented and stored in GitHub—no exceptions! 🚀**
+
+📌 Guidelines for Adding Code to the Repository
+
+1️⃣ Read the Guidelines Before Contributing
+
+Before writing or committing any code, ensure you have read:
+
+    📖 Best Practices for Code Documentation
+    📖 GitHub_Workflow_Guide.md
+
+These documents provide essential guidelines on clean coding, structuring scripts, and using Git correctly to facilitate seamless collaboration.
+2️⃣ Project Structure: How to Organize Your Code
+
+    Create a new directory inside the lab_projects folder
+        📌 The directory name should reflect the project (e.g., RNA_Analysis_Tool, not Johns_Scripts).
+    Inside this directory, organize your scripts logically, ensuring each script is well-commented block by block.
+    Provide a README.md file following the format below.
+
+3️⃣ README Documentation Template
+
+Each project must include a README.md file that follows this structured template:
+
+# Project Name  
+## 📌 Overview  
+- Briefly describe the project’s purpose and objectives.  
+
+## 🛠️ Methodology  
+- Summarize the key steps in the analysis or computational workflow.  
+- Outline the logical approach, including algorithms or models used.  
+- Provide an example of **expected input and output**.  
+
+## 🔧 Installation & Dependencies  
+- List **all required dependencies, libraries, and software** needed to run the scripts.  
+- Specify **whether the script is designed to run in NIVA's system or on local machines** (or both).  
+
+## 🚀 Usage Instructions (Running In Silico Experiments)  
+- **Provide step-by-step instructions** on how to execute the scripts for computational experiments.  
+- If applicable, include **command-line execution examples**:  
+  ```bash
+  python analyze_sequences.py --input data.fasta --output results.csv
+
+    Explain any expected parameters, input file formats, and outputs.
+
+⚠️ Assumptions & Important Notes
+
+    Document any manual assumptions, edge cases, or logical decisions incorporated into the script.
+    Mention known limitations or considerations when using the tool.
+
+
+    
