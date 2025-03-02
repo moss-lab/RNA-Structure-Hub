@@ -2,7 +2,7 @@ Why Our Lab Needs Version Control 🚀
 
 Our lab is actively working with shared code, and we are growing every day. We constantly create new scripts, adjust existing ones, and develop new versions of Scanfold designs and other experimental workflows. 
 ![explainingversioncontrol](https://github.com/user-attachments/assets/08c6b112-3dc4-416d-a057-2ce6281d8293)
-
+Currently, our documentation is very poor, and we often spend more time figuring out what was done, why it was done, and by whom, rather than actually using the existing scripts to improve or develop new ones. This has become a major drain on our lab's time, resources, and collective effort.
 
 
 
