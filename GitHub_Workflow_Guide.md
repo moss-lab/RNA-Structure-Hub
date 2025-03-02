@@ -35,7 +35,7 @@ If it works, you should see:
 
 Hi YOUR_USERNAME! You've successfully authenticated, but GitHub does not provide shell access.
 
-🚀 Step 5: Configure SSH for GitHub (If Needed)
+**🚀 Step 4: Configure SSH for GitHub (If Needed)**
 
 If the cloning fails due to multiple SSH keys, create a configuration file:
 
