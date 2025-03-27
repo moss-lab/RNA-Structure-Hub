@@ -1,0 +1,507 @@
+import pandas as pd
+
+'''any type of value seperated can be read with adjusting the pandas read function 
+however note do to the nautre of values appended to the file the output is not allowed to be a csv file
+'''
+
+
+
+input = pd.read_csv("CD_all") 
+output= "CD_w_motifs"
+with open(output,"a") as file:
+            file.write("gene_name*transcript_id*structure_number*i*j*sequence*DBN-mfe*DBN-refold*MFE*z-score*ED*tID_version*UTR*stems_mfe*hairpin_loops_mfe*bifurcation_loops_mfe*bulge_loops_mfe*symetric_internal_loops_mfe*asymetric_internal_loops_mfe*stems_refold*hairpin_loops_refold*bifurcation_loops_refold*bulge_loops_refold*symetric_internal_loops_refold*asymetric_internal_loops_refold"+"\n")
+
+names = input["gene_name"]
+ids = input["transcript_id"]
+shapes = input["structure_number"]
+ies = input["i"]
+js = input["j"]
+RNAs = input["sequence"]
+dbn_mfes = input["DBN-mfe"]
+dbn_refolds = input["DBN-refold"]
+mfes = input["MFE"]
+scores = input["z-score"]
+eds = input["ED"]
+tvs = input["tID_version"]
+utrs = input["UTR"]
+
+def rewrite(sq): #removes any char in a RNA dot bracket sqeuence that is not "(",")",or "." and replaces with "."
+    newSQ= ""
+    for char in sq:
+        if char !="."and char!="(" and char!=")":
+            newSQ+= "."
+        else:
+            newSQ+=char
+    return newSQ
+def index_readjust(index): #adds one to the indexs of nucleotides
+    i=0
+    new_index =""
+    temp_num=""
+    while i<len(index):
+        
+        if index[i]=="-" or index[i]=="^":
+            if temp_num=="":
+                temp_num=-1
+                i+=2
+                
+            new_index+= str(int(temp_num)+1) + index[i]
+            
+            temp_num=""
+        else:
+            temp_num+=index[i]
+        i+=1
+    new_index+= str(int(temp_num)+1)
+    return new_index
+def sort_index(sq_list):#sorts a list that ends with indexs inorder of greatest to largest
+    sq_dict = {}
+    i=1
+    while i<len(sq_list):
+        temp_num=""
+        j=0
+        while sq_list[i][len(sq_list[i])-1][j]!="-":
+            temp_num+= sq_list[i][len(sq_list[i])-1][j]
+            j+=1
+        sq_dict[int(temp_num)]=[]
+        sq_dict[int(temp_num)]+=sq_list[i]
+        i+=1
+    sq_dict=dict(sorted(sq_dict.items()))
+    final_list=[sq_list[0]]
+    final_list+=sq_dict.values()
+    return final_list
+def ID_stems(sq): #returns the stems in a RNA sequence in order of deepest stem from right to left results are seperated by commas
+    i=0
+    backward_bracket_count=0
+    forward_bracket_count=0
+    error_bracket_count=[]
+    adjust_end_bracket_count = 0
+    end=0
+    index=""
+    while i< len(sq):
+        if sq[i]==")":
+            temp=i
+            while i<len(sq) and sq[i]!="(":
+                if sq[i]==")":
+                    backward_bracket_count+=1
+                    
+                    end=i
+                
+                    
+                i+=1
+            
+            i=temp
+            
+            error_index=-1
+            bracket_found=False
+            while backward_bracket_count>0:
+                if sq[i]=="(":
+                    backward_bracket_count-=1
+                    bracket_found=True
+                if sq[i]=="]":
+                    if bracket_found:
+                        while backward_bracket_count>0:
+                            backward_bracket_count-= error_bracket_count[error_index]
+                            adjust_end_bracket_count -=error_bracket_count[error_index]
+                            error_index-=1
+                    else:
+                        error_index-=1
+                    
+                i-=1
+            i+=1
+            
+            adjust_end_bracket_count-=backward_bracket_count
+            while sq[i]!="(":
+                i+=1
+            while adjust_end_bracket_count<0:
+                if sq[end] ==")":
+                    adjust_end_bracket_count+=1
+                end-=1
+            while sq[end]!= ")":
+                
+                end-=1
+            
+            start_index=0
+            end_index=0
+            iteration=0
+           
+            while iteration<end:
+                if iteration<i and sq[iteration]=="[":
+                    temp_str=""
+                    iteration+=1
+                    while sq[iteration] !="]":
+                        temp_str+=sq[iteration]
+                        iteration+=1
+                    start_index+=int(temp_str)
+                    end_index+=int(temp_str)
+                    start_index-=1
+                    end_index-=1
+                elif iteration>=i and sq[iteration]=="[":
+                    index+=str(end_index-1)+"^"
+                    temp_str=""
+                    iteration+=1
+                    while sq[iteration] !="]":
+                        temp_str+=sq[iteration]
+                        iteration+=1
+                    end_index-=1
+                    end_index+=int(temp_str)
+                    index+=str(end_index+1)+"-"
+                    
+
+                iteration+=1
+                if iteration<=i:
+                    start_index+=1
+                end_index+=1
+            index=str(start_index)+"-"+index+str(end_index)
+              
+            newsq =sq[i:end+1]
+           
+            return newsq+","+index+","+ID_stems(sq[0:i]+"["+str(end_index-start_index+1)+"]"+sq[end+1:len(sq)])
+        elif sq[i]=="(":
+            forward_bracket_count+=1
+        elif sq[i] == "]":
+            error_bracket_count.append(forward_bracket_count)
+            forward_bracket_count=0
+        i+=1
+    
+    iteration=0
+    end_index=-1
+    while iteration<len(sq):
+        if sq[iteration] =="[":
+            index+=str(end_index)+"^"
+            temp_str=""
+            iteration+=1
+            while sq[iteration] !="]":
+                temp_str+=sq[iteration]
+                iteration+=1
+                    
+            end_index+=int(temp_str)+1
+                    
+            
+            index+=str(end_index)+"-"
+            end_index-=2
+
+        end_index+=1
+        iteration+=1
+    index="0"+"-"+index+str(end_index)
+
+    return sq +","+index
+def ID_stems_reformated(sq): #puts stems in more readable format
+    stem_list=ID_stems(sq).split(",")
+    temp_list1 = []
+    temp_list2=[]
+    index =0
+    while index <len(stem_list):
+        temp_list1.append(stem_list[index])
+        if len(temp_list1)==2:
+            temp_list2.append(temp_list1)
+            temp_list1=[]
+        index+=1
+    stem_list=temp_list2
+    stem_list.reverse()
+    return sort_index(stem_list)
+def ID_hairloops(sq,index): #returns a list of the hairloop's size, the stem's length, the hairloop's "junctions" note it is only actually a hairloop if junctions are zero, and the index's where the hairloop occurs
+    i=0
+    j=0
+    loop_size=0
+    stem_len=0
+    branch_count=0
+    end_index=0
+    hair_notfound=True
+    front_index=""
+    back_index=""
+    
+
+    while i<len(sq):
+        if sq[i]=="[":
+            branch_count+=1
+            stem_len+=2
+            while sq[i] != "]":
+                i+=1
+        elif hair_notfound and sq[i]==")":
+            end_index=i
+            stem_len+=1
+            j=i
+            while sq[j]!="(":
+                if sq[j]=="."or sq[j]=="["or sq[j]=="]":
+                    loop_size+=1
+                j-=1
+            
+            hair_notfound= False
+        else:
+            stem_len+=1
+        i+=1
+    k=0
+    back_dash_not_found = True
+    
+
+    while index[k]!="-":
+        front_index+=index[k]
+        
+        if back_dash_not_found and index[len(index)-1-k]!="-":
+            back_index=index[len(index)-1-k]+back_index
+        else:
+            back_dash_not_found=False
+        
+
+        k+=1
+    while  back_dash_not_found and index[len(index)-1-k]!="-":
+        back_index=index[len(index)-1-k]+back_index
+        k+=1
+    
+    front = str(int(front_index)+j+1)
+    back =str(int(back_index)-(len(sq)-end_index))
+    hairloop_index= front+index[len(front_index):len(index)-len(back_index)]+back
+
+
+    return [loop_size,stem_len,branch_count,hairloop_index,j,end_index]
+def ID_bulge(sq,index,start_left,start_right): #returns the number of nucelotides that make up an internal loop on the left and on the right if ethier the right or left is zero then internal loop is really a bulge
+    
+    bulge_list=[]
+    first_left_index=0
+    second_left_index=0
+    first_right_index=0
+    second_right_index=0
+    front_index=""
+    back_index=""
+    k=0
+    back_dash_not_found = True
+    
+
+    while index[k]!="-":
+        front_index+=index[k]
+        
+        
+        if back_dash_not_found and index[len(index)-1-k]!="-":
+            back_index=index[len(index)-1-k]+back_index
+        else:
+            back_dash_not_found=False
+        
+
+        k+=1
+    while  back_dash_not_found and index[len(index)-1-k]!="-":
+        back_index=index[len(index)-1-k]+back_index
+        k+=1
+  
+
+    while start_left>=0 or start_right< len(sq):
+        left_count=0
+        right_count=0
+
+        if start_left>=0 and sq[start_left]==".":
+            first_left_index=start_left
+            while sq[start_left]!="(":
+                left_count+=1
+                start_left-=1
+        second_left_index=start_left
+
+        if start_right< len(sq) and sq[start_right]==".":
+            first_right_index=start_right
+            while sq[start_right]!=")":
+                right_count+=1
+                start_right+=1
+        second_right_index=start_right
+        
+        bulge_index_left=str(second_left_index+1+int(front_index))+"-"+str(first_left_index+int(front_index))
+        
+        bulge_index_right =str(int(back_index)-(len(sq)-(first_right_index+1))) +"-"+ str(int(back_index)-(len(sq)-(second_right_index)))
+        if  left_count>0 and right_count<=0: 
+            bulge_index=bulge_index_left
+        elif right_count>0 and left_count<=0:
+            bulge_index=bulge_index_right
+        else:
+            bulge_index= bulge_index_left +"^"+bulge_index_right
+
+        if left_count>0 or right_count>0:
+            bulge_list.append([left_count,right_count,bulge_index])
+        start_left -=1
+        start_right +=1
+    bulge_list.reverse()
+    return bulge_list
+def raw_data(sq): # returns the "raw data" of all RNA motifs present in a sequence
+
+    sq = rewrite(sq)
+    stems_list=ID_stems_reformated(sq)
+    hair_loop_list=[]
+    bulge_list =[]
+
+    i=1
+    while i<len(stems_list):
+        temp_list=ID_hairloops(stems_list[i][0],stems_list[i][1])
+        hair_loop_list.append(temp_list[0:4])
+        bulge_list.append(ID_bulge(stems_list[i][0],stems_list[i][1],temp_list[4],temp_list[5]))
+        i+=1
+    return [stems_list,hair_loop_list, bulge_list]
+def convert_to_lgn(sq_dbn,sq_n,index): # converts dot bracket notation squences to latin greek notation squences (unfinshed)
+    latin_to_greek={"A":"α","T":"θ","G":"γ","C":"κ","U":"μ"}
+def index_to_sq(index,sq): # converts nucleotide indexes to the corresponding nucelotide sequence
+    
+    i=0
+    output_sq=""
+    start_index=""
+    stop_index=""
+    while i< len(index):
+        
+        if index[i]=="-":
+            i+=1
+            while i<len(index) and index[i]!="^":
+                stop_index +=index[i]
+                i+=1
+            start=int(start_index)
+            stop=int(stop_index)
+            
+            while start<=stop:
+               output_sq+=sq[start]
+               start+=1
+            if i<len(index):
+                output_sq+="^"
+            start_index=""
+            stop_index=""
+        else:
+            start_index +=index[i]
+        i+=1
+    return output_sq
+def RNA_motif_ID(sq_dbn,sq_n):    
+
+
+   
+    raw_data_list = raw_data(sq_dbn)
+  
+    stems=raw_data_list[0]
+    loops_and_junc=raw_data_list[1]
+    sym_and_asym_bulge= raw_data_list[2]
+
+    loops=[]
+    junctions=[]
+    symetric_loops=[]
+    asymetric_loops=[]
+    internal_loops=[]
+    bulges=[]
+
+
+    for loop in loops_and_junc:
+        if loop[2]==0:
+            loops.append([loop[0],loop[3]])
+        else:
+            junctions.append([loop[2],loop[3]])
+    for loop in sym_and_asym_bulge:
+        for bulge in loop:
+            if bulge[0]==0 or  bulge[1]==0:
+                bulges.append(bulge)
+            else:
+                internal_loops.append(bulge)
+    for loop in internal_loops:
+        if loop[1]==loop[0]:
+            symetric_loops.append(loop)
+        else:
+            asymetric_loops.append(loop)
+
+
+
+    for stem in stems:
+        stem.append(index_to_sq(stem[1],sq_n))
+
+    for loop in loops:
+        loop.append(index_to_sq(loop[1],sq_n))
+
+    for junction in junctions:
+        junction.append(index_to_sq(junction[1],sq_n))
+
+    for bulge in bulges:
+        bulge.append(index_to_sq(bulge[2],sq_n))
+
+    for symetric_loop in symetric_loops:
+        symetric_loop.append(index_to_sq(symetric_loop[2],sq_n))
+
+    for asymetric_loop in asymetric_loops:
+        asymetric_loop.append(index_to_sq(asymetric_loop[2],sq_n))
+
+    i=0
+    while i < len(stems):
+        stems[i][1]= index_readjust(stems[i][1])
+        i+=1
+
+    i=0
+    while i < len(loops):
+        loops[i][1]= index_readjust(loops[i][1])
+        i+=1
+
+    i=0
+    while i < len(junctions):
+        junctions[i][1]= index_readjust(junctions[i][1])
+        i+=1
+
+    i=0
+    while i < len(bulges):
+        bulges[i][2]= index_readjust(bulges[i][2])
+        i+=1
+
+    i=0
+    while i < len(symetric_loops):
+        symetric_loops[i][2]= index_readjust(symetric_loops[i][2])
+        i+=1
+
+    i=0
+    while i < len(asymetric_loops):
+        asymetric_loops[i][2]= index_readjust(asymetric_loops[i][2])
+        i+=1
+
+    junctions_alt=[]
+    for junction in junctions:
+        count=0
+        unbonded_list=[]
+        for char in junction[2]:
+            
+            if char=="^":
+                if count!=0:
+                    unbonded_list.append(count)
+                count=-1
+            count+=1
+        
+        
+        if count!=0:
+            unbonded_list.append(count)
+    junctions_alt.append([junction[0],unbonded_list,junction[1],junction[2]])
+
+    return [stems,loops,junctions_alt,bulges,symetric_loops,asymetric_loops]
+
+
+
+x=0
+while x<len(RNAs):
+    #print(x) for debuging
+    
+    motif_list_mfe=RNA_motif_ID(dbn_mfes[x],RNAs[x])
+    '''print("m")
+    print(dbn_refolds[x])
+    print(RNAs[x])
+    print(len(dbn_refolds[x]))
+    print(len(RNAs[x])) '''  #for debugging
+    motif_list_refold=RNA_motif_ID(dbn_refolds[x],RNAs[x])
+    
+
+    stems_mfe=motif_list_mfe[0]
+    loops_mfe=motif_list_mfe[1]
+    junctions_mfe=motif_list_mfe[2]
+    bulges_mfe=motif_list_mfe[3]
+    symetric_loops_mfe=motif_list_mfe[4]
+    asymetric_loops_mfe=motif_list_mfe[5]
+
+    stems_refold=motif_list_refold[0]
+    loops_refold=motif_list_refold[1]
+    junctions_refold=motif_list_refold[2]
+    bulges_refold=motif_list_refold[3]
+    symetric_loops_refold=motif_list_refold[4]
+    asymetric_loops_refold=motif_list_refold[5]
+
+
+    with open(output,"a") as file:
+            file.write(names[x]+"*"+str(ids[x])+"*"+str(shapes[x])+"*"+str(ies[x])+"*"+str(js[x])+"*"
+                       +str(RNAs[x])+"*"+str(dbn_mfes[x])+"*"+str(dbn_refolds[x])+"*"+str(mfes[x])+"*"
+                       +str(scores[x])+"*"+str(eds[x])+"*"+str(tvs[x])+"*"+str(utrs[x])+"*"+str(stems_mfe)+"*"
+                       +str(loops_mfe)+"*"+str(junctions_mfe)+"*"+str(bulges_mfe)+"*"+str(symetric_loops_mfe)+"*"
+                       +str(asymetric_loops_mfe)+"*"+str(stems_refold)+"*"+str(loops_refold)+"*"+str(junctions_refold)+"*"
+                       +str(bulges_refold)+"*"+str(symetric_loops_refold)+"*"+str(asymetric_loops_refold)+"\n")
+             
+    x+=1
+
+
+
